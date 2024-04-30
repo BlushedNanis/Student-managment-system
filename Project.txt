@@ -1,0 +1,14 @@
+Objective:
+    Create software with a graphical user interface (GUI) for managing enrolled 
+    students' records. 
+
+User aim: 
+    Teachers and school administration personnel
+
+Needs:
+    1. View (ID, Name, Course, Phone)
+    2. Insert record
+    3. Update record
+    4. Delete record
+    5. Search record
+    6. Sort record
