@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout,\
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem,\
     QDialog, QVBoxLayout, QComboBox
 from PyQt6.QtGui import QAction
+from PyQt6.QtCore import Qt
 from sys import argv, exit
 import sqlite3 as db
 
@@ -32,7 +33,7 @@ class MainWindow(QMainWindow):
         self.table.setHorizontalHeaderLabels(("ID", "Name", "Course", "Phone"))
         self.table.verticalHeader().setVisible(False)
         self.setCentralWidget(self.table)
-        
+
         self.load_data()
         
     def load_data(self):
@@ -101,15 +102,21 @@ class SearchDialog(QDialog):
         layout = QVBoxLayout()
         self.setFixedSize(300, 300)
         
-        search_line = QLineEdit()
-        search_line.setPlaceholderText("Name")
-        layout.addWidget(search_line)
+        self.name_line = QLineEdit()
+        self.name_line.setPlaceholderText("Name")
+        layout.addWidget(self.name_line)
         button = QPushButton("Search")
+        button.clicked.connect(self.search)
         layout.addWidget(button)
         
         self.setLayout(layout)
         
-        
+    def search(self):
+        name = self.name_line.text()
+        items = main_window.table.findItems(name, Qt.MatchFlag.MatchFixedString)
+        for item in items:
+            main_window.table.item(item.row(), item.column()).setSelected(True)
+            
         
 
 conn = db.connect("database.db")
