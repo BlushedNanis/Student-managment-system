@@ -10,13 +10,19 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Student Management System")
+        self.resize(600, 600)
         
         file_menu_item = self.menuBar().addMenu("&File")
         help_menu_item = self.menuBar().addMenu("&Help")
+        edit_menu_item = self.menuBar().addMenu("&Edit")
         
         add_student_action = QAction("Add student", self)
         add_student_action.triggered.connect(self.insert)
         file_menu_item.addAction(add_student_action)
+        
+        search_student_action = QAction("Search", self)
+        search_student_action.triggered.connect(self.search)
+        edit_menu_item.addAction(search_student_action)
         
         about_action = QAction("About", self)
         help_menu_item.addAction(about_action)
@@ -42,6 +48,10 @@ class MainWindow(QMainWindow):
 
     def insert(self):
         dialog = InsertDialog()
+        dialog.exec()
+        
+    def search(self):
+        dialog = SearchDialog()
         dialog.exec()
         
         
@@ -82,6 +92,24 @@ class InsertDialog(QDialog):
         cur.close()
         conn.close()
         main_window.load_data()
+        
+        
+class SearchDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Search Student")
+        layout = QVBoxLayout()
+        self.setFixedSize(300, 300)
+        
+        search_line = QLineEdit()
+        search_line.setPlaceholderText("Name")
+        layout.addWidget(search_line)
+        button = QPushButton("Search")
+        layout.addWidget(button)
+        
+        self.setLayout(layout)
+        
+        
         
 
 conn = db.connect("database.db")
