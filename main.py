@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout,\
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem,\
-    QDialog, QVBoxLayout, QComboBox
-from PyQt6.QtGui import QAction
+    QDialog, QVBoxLayout, QComboBox, QToolBar
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtCore import Qt
 from sys import argv, exit
 import sqlite3 as db
@@ -17,11 +17,11 @@ class MainWindow(QMainWindow):
         help_menu_item = self.menuBar().addMenu("&Help")
         edit_menu_item = self.menuBar().addMenu("&Edit")
         
-        add_student_action = QAction("Add student", self)
+        add_student_action = QAction(QIcon("icons\\add"), "Add student", self)
         add_student_action.triggered.connect(self.insert)
         file_menu_item.addAction(add_student_action)
         
-        search_student_action = QAction("Search", self)
+        search_student_action = QAction(QIcon("icons\\search"),"Search", self)
         search_student_action.triggered.connect(self.search)
         edit_menu_item.addAction(search_student_action)
         
@@ -35,6 +35,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.table)
 
         self.load_data()
+        
+        tool_bar = QToolBar()
+        tool_bar.setMovable(True)
+        self.addToolBar(tool_bar)
+        tool_bar.addAction(add_student_action)
+        tool_bar.addAction(search_student_action)
         
     def load_data(self):
         conn = db.connect("database.db")    
