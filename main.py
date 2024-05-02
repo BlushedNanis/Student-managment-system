@@ -63,7 +63,9 @@ class MainWindow(QMainWindow):
         edit_button = QPushButton("Edit Record")
         edit_button.clicked.connect(self.edit)
         self.status_bar.addWidget(edit_button)
-
+        delete_button = QPushButton("Delete Record")
+        delete_button.clicked.connect(self.delete)
+        self.status_bar.addWidget(delete_button)
         
     def insert(self):
         dialog = InsertDialog()
@@ -77,6 +79,9 @@ class MainWindow(QMainWindow):
         dialog = EditDialog()
         dialog.exec()
         
+    def delete(self):
+        self.dialog = DeleteDialog()
+        self.dialog.exec()
         
         
 class InsertDialog(QDialog):
@@ -161,16 +166,18 @@ class EditDialog(QDialog):
         button.clicked.connect(self.edit_student)
         layout.addWidget(button)
         
+        self.student_id = int(main_window.table.item(main_window.table.currentRow()
+                                                     , 0).text())
+        
         self.load_student()
         
         self.setLayout(layout)
     
     def load_student(self):
-        id = int(main_window.table.item(main_window.table.currentRow(), 0).text())
         conn = db.connect("database.db")
         cur = conn.cursor()
         cur.execute("SELECT name, course, phone FROM students "\
-                    f"WHERE id = {id}")
+                    f"WHERE id = {self.student_id}")
         result = cur.fetchall()
         name, course, phone = result[0]
         cur.close()
@@ -185,17 +192,49 @@ class EditDialog(QDialog):
         name = self.student_name.text()
         course = self.courses_box.currentText()
         phone = self.student_phone.text()
-        id = int(main_window.table.item(main_window.table.currentRow(), 0).text())
         conn = db.connect("database.db")
         cur = conn.cursor()
         cur.execute("UPDATE students SET name = ?, course = ?, phone = ? "\
-                    f"WHERE id = {id}", (name, course, phone))
+                    f"WHERE id = {self.student_id}", (name, course, phone))
         conn.commit()
         cur.close()
         conn.close()
         self.close()
         main_window.load_data()
     
+    
+class DeleteDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Delete Student Record")
+        layout = QVBoxLayout()
+        self.setFixedSize(100, 100)
+        
+        #Dialog widgets
+        label = QLabel("Are you sure?")
+        layout.addWidget(label)
+        yes_button = QPushButton("YES")
+        yes_button.clicked.connect(self.delete_student)
+        layout.addWidget(yes_button)
+        no_button = QPushButton("NO")
+        no_button.clicked.connect(self.close)
+        layout.addWidget(no_button)
+        
+        self.student_id = int(main_window.table.item(main_window.table.currentRow()
+                                                     , 0).text())
+        
+        self.setLayout(layout)
+        
+    def delete_student(self):
+        conn = db.connect("database.db")
+        cur = conn.cursor()
+        cur.execute(f"DELETE FROM students WHERE id == {self.student_id}")
+        conn.commit()
+        cur.close()
+        conn.close()
+        self.close()
+        main_window.load_data()
+        
 
 conn = db.connect("database.db")
 cur = conn.cursor()
