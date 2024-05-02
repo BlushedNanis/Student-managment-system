@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout,\
+from PyQt6.QtWidgets import QApplication, QLabel, QMessageBox, QGridLayout,\
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem,\
     QDialog, QVBoxLayout, QComboBox, QToolBar, QAbstractItemView, QStatusBar
 from PyQt6.QtGui import QAction, QIcon
@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
         
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
+        self.status_bar.setStyleSheet("QStatusBar::item {border: none;}")
         self.table.cellClicked.connect(self.cell_clicked)
         
         
@@ -62,9 +63,15 @@ class MainWindow(QMainWindow):
     def cell_clicked(self):
         edit_button = QPushButton("Edit Record")
         edit_button.clicked.connect(self.edit)
-        self.status_bar.addWidget(edit_button)
         delete_button = QPushButton("Delete Record")
         delete_button.clicked.connect(self.delete)
+        
+        children = self.findChildren(QPushButton)
+        if children:
+            for child in children:
+                self.status_bar.removeWidget(child)
+        
+        self.status_bar.addWidget(edit_button)
         self.status_bar.addWidget(delete_button)
         
     def insert(self):
@@ -207,18 +214,18 @@ class DeleteDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Delete Student Record")
-        layout = QVBoxLayout()
-        self.setFixedSize(100, 100)
+        layout = QGridLayout()
+        self.setFixedSize(260, 100)
         
         #Dialog widgets
-        label = QLabel("Are you sure?")
-        layout.addWidget(label)
+        label = QLabel("Are you sure you want to delete this record?")
+        layout.addWidget(label, 0, 0, 1, 2)
         yes_button = QPushButton("YES")
         yes_button.clicked.connect(self.delete_student)
-        layout.addWidget(yes_button)
+        layout.addWidget(yes_button, 1, 0)
         no_button = QPushButton("NO")
         no_button.clicked.connect(self.close)
-        layout.addWidget(no_button)
+        layout.addWidget(no_button, 1, 1)
         
         self.student_id = int(main_window.table.item(main_window.table.currentRow()
                                                      , 0).text())
@@ -234,6 +241,11 @@ class DeleteDialog(QDialog):
         conn.close()
         self.close()
         main_window.load_data()
+        
+        confirmation_box = QMessageBox()
+        confirmation_box.setWindowTitle("Success")
+        confirmation_box.setText("The record was deleted successfully")
+        confirmation_box.exec()
         
 
 conn = db.connect("database.db")
