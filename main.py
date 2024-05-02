@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout,\
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem,\
-    QDialog, QVBoxLayout, QComboBox, QToolBar
+    QDialog, QVBoxLayout, QComboBox, QToolBar, QAbstractItemView, QStatusBar
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtCore import Qt
 from sys import argv, exit
@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         help_menu_item.addAction(about_action)
         
         self.table = QTableWidget()
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(("ID", "Name", "Course", "Phone"))
         self.table.verticalHeader().setVisible(False)
@@ -42,6 +43,11 @@ class MainWindow(QMainWindow):
         tool_bar.addAction(add_student_action)
         tool_bar.addAction(search_student_action)
         
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.table.cellClicked.connect(self.cell_clicked)
+        
+        
     def load_data(self):
         conn = db.connect("database.db")    
         data = conn.execute("SELECT * FROM students")
@@ -53,6 +59,12 @@ class MainWindow(QMainWindow):
                                    QTableWidgetItem(str(cell_data)))
         conn.close()
 
+    def cell_clicked(self):
+        edit_button = QPushButton("Edit Record")
+        edit_button.clicked.connect(self.edit)
+        self.status_bar.addWidget(edit_button)
+
+        
     def insert(self):
         dialog = InsertDialog()
         dialog.exec()
@@ -60,6 +72,11 @@ class MainWindow(QMainWindow):
     def search(self):
         dialog = SearchDialog()
         dialog.exec()
+        
+    def edit(self):
+        dialog = EditDialog()
+        dialog.exec()
+        
         
         
 class InsertDialog(QDialog):
@@ -85,7 +102,6 @@ class InsertDialog(QDialog):
         layout.addWidget(button)
         
         self.setLayout(layout)
-        
         
     def add_student(self):
         name = self.student_name.text()
@@ -122,8 +138,64 @@ class SearchDialog(QDialog):
         items = main_window.table.findItems(name, Qt.MatchFlag.MatchFixedString)
         for item in items:
             main_window.table.item(item.row(), item.column()).setSelected(True)
-            
+
+
+class EditDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Edit Student Record")
+        layout = QVBoxLayout()
+        self.setFixedSize(300, 300)
         
+        # Dialog widgets
+        self.student_name = QLineEdit()
+        self.student_name.setPlaceholderText("Name")
+        layout.addWidget(self.student_name)
+        self.courses_box = QComboBox()
+        self.courses_box.addItems(("Biology", "Math", "Astronomy", "Physics"))
+        layout.addWidget(self.courses_box)
+        self.student_phone = QLineEdit()
+        self.student_phone.setPlaceholderText("Phone number")
+        layout.addWidget(self.student_phone)
+        button = QPushButton("Submit")
+        button.clicked.connect(self.edit_student)
+        layout.addWidget(button)
+        
+        self.load_student()
+        
+        self.setLayout(layout)
+    
+    def load_student(self):
+        id = int(main_window.table.item(main_window.table.currentRow(), 0).text())
+        conn = db.connect("database.db")
+        cur = conn.cursor()
+        cur.execute("SELECT name, course, phone FROM students "\
+                    f"WHERE id = {id}")
+        result = cur.fetchall()
+        name, course, phone = result[0]
+        cur.close()
+        conn.close()
+        
+        self.student_name.setText(name)
+        self.courses_box.setCurrentText(course)
+        self.student_phone.setText(phone)
+        
+        
+    def edit_student(self):
+        name = self.student_name.text()
+        course = self.courses_box.currentText()
+        phone = self.student_phone.text()
+        id = int(main_window.table.item(main_window.table.currentRow(), 0).text())
+        conn = db.connect("database.db")
+        cur = conn.cursor()
+        cur.execute("UPDATE students SET name = ?, course = ?, phone = ? "\
+                    f"WHERE id = {id}", (name, course, phone))
+        conn.commit()
+        cur.close()
+        conn.close()
+        self.close()
+        main_window.load_data()
+    
 
 conn = db.connect("database.db")
 cur = conn.cursor()
