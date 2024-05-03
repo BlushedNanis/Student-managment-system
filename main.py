@@ -27,6 +27,7 @@ class MainWindow(QMainWindow):
         
         about_action = QAction("About", self)
         help_menu_item.addAction(about_action)
+        help_menu_item.triggered.connect(self.about)
         
         self.table = QTableWidget()
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -90,6 +91,20 @@ class MainWindow(QMainWindow):
         self.dialog = DeleteDialog()
         self.dialog.exec()
         
+    def about(self):
+        self.dialog = AboutDialog()
+        self.dialog.exec()
+        
+class AboutDialog(QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("About")
+        content = """
+        This app was created during the course "The python Mega Course" by Ardit Sulce.
+        Feel free to use or modify this app.
+        """
+        self.setText(content)
+
         
 class InsertDialog(QDialog):
     def __init__(self):
