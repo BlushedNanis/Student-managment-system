@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
         """
         Loads the students data stored in the database on the table at main window.
         """
-        conn = DataBase.connect()    
+        conn = DataBase().connect()    
         data = conn.execute("SELECT * FROM students")
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(data):
@@ -181,7 +181,7 @@ class InsertDialog(QDialog):
         course= self.courses_box.itemText(self.courses_box.currentIndex())
         phone = self.student_phone.text()
         
-        conn = DataBase.connect()
+        conn = DataBase().connect()
         cur = conn.cursor()
         cur.execute("INSERT INTO students(name, course, phone) VALUES (?,?,?)",
                     (name, course, phone))
@@ -254,8 +254,8 @@ class EditDialog(QDialog):
         button.clicked.connect(self.edit_student)
         layout.addWidget(button)
         
-        self.student_id = int(main_window.table.item(main_window.table.currentRow()
-                                                     , 0).text())
+        self.student_id = int(main_window.table.item(main_window.table.currentRow(),
+                                                     0).text())
         
         self.load_student()
         
@@ -265,7 +265,7 @@ class EditDialog(QDialog):
         """
         Loads the information of the student on the edit dialog widgets.
         """
-        conn = DataBase.connect()
+        conn = DataBase().connect()
         cur = conn.cursor()
         cur.execute("SELECT name, course, phone FROM students "\
                     f"WHERE id = {self.student_id}")
@@ -288,7 +288,7 @@ class EditDialog(QDialog):
         course = self.courses_box.currentText()
         phone = self.student_phone.text()
         
-        conn = DataBase.connect()
+        conn = DataBase().connect()
         cur = conn.cursor()
         cur.execute("UPDATE students SET name = ?, course = ?, phone = ? "\
                     f"WHERE id = {self.student_id}", (name, course, phone))
@@ -333,7 +333,7 @@ class DeleteDialog(QDialog):
         """
         Delete the user information from the database.
         """
-        conn = DataBase.connect()
+        conn = DataBase().connect()
         cur = conn.cursor()
         cur.execute(f"DELETE FROM students WHERE id == {self.student_id}")
         conn.commit()
@@ -342,7 +342,7 @@ class DeleteDialog(QDialog):
         self.close()
         main_window.load_data()
         
-        # Displays a confirmation message box 
+        # Shows a confirmation message to the user.
         confirmation_box = QMessageBox()
         confirmation_box.setWindowTitle("Success")
         confirmation_box.setText("The record was deleted successfully")
@@ -350,13 +350,12 @@ class DeleteDialog(QDialog):
 
 
 class DataBase:
-
     def __init__(self, db_file="database.db") -> None:
         self.db_file = db_file
     
     def connect(self):
-        self.connection = db.connect(self.db_file)
-        return self.connection
+        connection = db.connect(self.db_file)
+        return connection
 
     def create(self) -> None:
         conn = db.connect(self.db_file)
@@ -371,7 +370,7 @@ class DataBase:
         conn.close()
 
 
-DataBase.create()
+DataBase().create()
 
 app = QApplication(argv)
 main_window = MainWindow()
